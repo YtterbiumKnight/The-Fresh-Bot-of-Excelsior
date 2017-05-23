@@ -1,10 +1,9 @@
 #The Fresh Bot of Excelsior by Exanimem#3112 and Ned#5609
 #test
-import discord
-import asyncio
 import logging
-import feedparser
 import random
+import discord
+import feedparser
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
@@ -21,13 +20,12 @@ async def on_ready(): #Logs in (?)
     print(client.user.id)
     print('------')
 
+r = list(range(1, 10))
+
 @client.event
 async def on_message(message): #Performs on message
     if message.author.id == client.user.id: #If message author is client
         return #Ignore
-
-    if message.author.id != '95978401654919168':
-        return
 
 #rss commands
 
@@ -41,9 +39,13 @@ async def on_message(message): #Performs on message
         await client.send_message(message.channel, '***{0}*** \n{1}'.format(a.title, a.link)) #Formats message. Posts title, a line break then the link
 
     elif message.content.startswith("[news"):
-        r = list(range(1, 10))
+        if message.author.id != '95978401654919168':
+            await client.send_message(message.channel, 'Command is temporaily unavaliable as I redo it')
+            return
         rv = random.choice(r)
         r.remove(rv)
+        print(r)
+        print(rv)
         a = feedparser.parse('http://feeds.reuters.com/reuters/topNews').entries[rv] #Gets a article in the order corresponding to the number randomly chosen from Reuters Top News RSS Feed
         await client.send_message(message.channel, '***{0}*** \n{1}'.format(a.title, a.link)) #Formats message. Posts title, a line break then the link
 
@@ -53,6 +55,8 @@ async def on_message(message): #Performs on message
         await client.send_message(message.channel, '***{0}*** \n{1}'.format(a.title, a.link)) #Formats message. Posts title, a line break then the link
 
     elif message.content.startswith("[awwnime"):
+        if message.author.id != '95978401654919168':
+            await client.send_message(message.channel, 'Command is unavaliable until I finish making it')
         a = feedparser.parse('https://www.reddit.com/r/awwnime/.rss').entries[1] #Gets latest entry from Onion RSS feed
         await client.send_message(message.channel, '***{0}*** \n{1}'.format(a.title, a.link.url)) #Formats message. Posts title, a line break then the link
 
@@ -83,7 +87,7 @@ async def on_message(message): #Performs on message
         await client.send_message(discord.Object(id=log_channel), embed=em) #Sends Rich Embed to log_channel
 
     elif message.content.startswith("[info"):
-        em = discord.Embed(title='Information', description='**[topnews** - Top news article by Reuters \n**[randnews** - Randomly picks one of the top 10 articles on Reuters \n**[onion** - Picks top onion article \n**[say** - Commands the bot to say whatever you want it to \n**[rss** - Paste a URL to any RSS feed and get the top article!\n**Github** - https://github.com/Exanimem/The-Fresh-Bot-of-Excelsior\n**Trello** - https://trello.com/b/Ehk9xZMx/the-fresh-bot-of-excelsior', colour=0x3366FF) #Defines em as an embed, creates embed title, descripton, and defines the color
+        em = discord.Embed(title='Information', description='**Expect shit to be broken and not working. This bot is a work in progres. Any bugs or exploits are probably known, and this command may be out of date. Any help would be appreciated**\n**[topnews** - Top news article by Reuters \n**[randnews** - Randomly picks one of the top 10 articles on Reuters \n**[onion** - Picks top onion article \n**[say** - Commands the bot to say whatever you want it to \n**[rss** - Paste a URL to any RSS feed and get the top article!\n**Github** - https://github.com/Exanimem/The-Fresh-Bot-of-Excelsior\n**Trello** - https://trello.com/b/Ehk9xZMx/the-fresh-bot-of-excelsior', colour=0x3366FF) #Defines em as an embed, creates embed title, descripton, and defines the color
         em.set_footer(text="Made by Exanimem#3112 using Discord.py") #Creates footer for embed
         await client.send_message(message.channel, embed=em)
 
