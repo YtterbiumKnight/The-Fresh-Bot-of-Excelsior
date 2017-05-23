@@ -1,5 +1,4 @@
 #The Fresh Bot of Excelsior by Exanimem#3112 and Ned#5609
-#Testing Github Webhook
 import discord
 import asyncio
 import logging
