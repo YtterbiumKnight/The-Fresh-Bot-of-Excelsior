@@ -75,12 +75,19 @@ async def on_message(message):
     global random_rss_entry
     global rss_dict_entry
 
-    async def devCommand():
+    async def exclusiveCommand(dev=False, WIP=False):
         # For when a command is a work in progress or only for devs
         if message.author.id != '95978401654919168':
-            await client.send_message(message.channel,
-                                      "This command is a work in progress"
-                                      " or a dev tool, thus unavaliable")
+            if dev is True:
+                await client.send_message(message.channel,
+                                          "This command is dev tool and not"
+                                          " avaliable to normal users")
+
+            if WIP is True:
+                await client.send_message(message.channel,
+                                          "This command is a work in progress"
+                                          " thus unavaliable for the time"
+                                          " being")
             return
 
     if message.author.id == client.user.id:  # If message author is the bot
@@ -101,7 +108,7 @@ async def on_message(message):
         # Status: Waiting for comments on Reddit post to make it work
         # Cannot get link post's link with current knowledge and research
         rss_dict_entry = "awwnime"
-        await devCommand()
+        await exclusiveCommand(WIP=True)
         feed_entry = feedparser.parse(
             'https://www.reddit.com/r/awwnime/.rss').entries[0]
         await client.send_message(message.channel, '***{0}*** \n{1}'
@@ -156,7 +163,7 @@ async def on_message(message):
         return log_channel
 
     elif message.content.startswith("[say"):  # WORK IN PROGRESS
-        await devCommand()
+        await exclusiveCommand()
         say_message = message.content[4:].strip()
         await client.send_message(message.channel, say_message)
         if not log_channel:
@@ -176,16 +183,16 @@ async def on_message(message):
         await client.send_message(discord.Object(id=log_channel), embed=em)
         # Sends Rich Embed to value specificed, in this case, the log channel
 
-    elif message.content.startswith("[removelists"):
-        await devCommand()
-        rss_entries_dict['RSS'].remove(range(0, 10))
-        rss_entries_dict['awwnime'].remove(range(0, 10))
-        rss_entries_dict['news'].remove(range(0, 10))
-        rss_entries_dict['onion'].remove(range(0, 10))
+    elif message.content.startswith("[removeentries"):  # WORK IN PROGRES
+        await exclusiveCommand()
+        remove_entries_key = message.content[15:]
+        if remove_entries_key == 'news':
+            rss_entries_dict['news'].remove(range(0, 9))
+            await client.send_message(message.channel, "News entries removed")
 
     elif message.content.startswith("[info"):
         em = discord.Embed(title="Information", description="**Expect"
-                           "shit to be broken and not working. This bot "
+                           " shit to be broken and not working. This bot "
                            "is a work in progres. Any bugs or exploits "
                            "are probably known, and this command may be "
                            "out of date. Any help would be appreciated**"
