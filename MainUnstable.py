@@ -18,6 +18,8 @@ logger.addHandler(handler)
 
 client = discord.Client()
 
+server = discord.Server
+
 #  -----------------------------RSS Start--------------------------------------
 
 global rss_dict_entry  # Entry in rss_entries_dict. Each random command has
@@ -76,19 +78,20 @@ async def on_message(message):
     global rss_dict_entry
 
     async def exclusiveCommand(dev=False, WIP=False):
+        # WORK IN PROGRESS. Stopped working after parameters.
+        # When using return, it should return the function it's being
+        # called in, not the function itself.
         # For when a command is a work in progress or only for devs
         if message.author.id != '95978401654919168':
             if dev is True:
                 await client.send_message(message.channel,
                                           "This command is dev tool and not"
                                           " avaliable to normal users")
-
             if WIP is True:
                 await client.send_message(message.channel,
                                           "This command is a work in progress"
                                           " thus unavaliable for the time"
                                           " being")
-            return
 
     if message.author.id == client.user.id:  # If message author is the bot
         return
@@ -108,12 +111,12 @@ async def on_message(message):
         # Status: Waiting for comments on Reddit post to make it work
         # Cannot get link post's link with current knowledge and research
         rss_dict_entry = "awwnime"
+        randomRssEntry()
         await exclusiveCommand(WIP=True)
         feed_entry = feedparser.parse(
-            'https://www.reddit.com/r/awwnime/.rss').entries[0]
+            'https://www.reddit.com/r/awwnime/.rss').entries[random_rss_entry]
         await client.send_message(message.channel, '***{0}*** \n{1}'
                                   .format(feed_entry.title, feed_entry.link))
-        print(feed_entry)
 
     elif message.content.startswith("[topnews"):
         feed_entry = feedparser.parse(
@@ -149,21 +152,24 @@ async def on_message(message):
                                   ", 30 minute refresh rate bypassed")
 
 # ---------------------------RSS Commands End---------------------------------
-
     elif message.content.startswith("[setlog"):  # WORK IN PROGRESS
         # Takes channel ID to post log messages
         # To Do: Save channel ID set for server
-        if message.author.id != message.server.owner.id:  # If not server owner
-            await client.send_message(message.channel, "This command "
-                                      "is only for the server owner")
-            return
+        await exclusiveCommand(dev=True)
         global log_channel
-        log_channel = message.content[4:].strip()
-        log_channel = int(log_channel)  # Turns log_channel in  to an interger
-        return log_channel
+        log_channel = message.content[8:].strip()
+        log_channel = int(log_channel)  # Turns log_channel in to an interger
+        await client.send_message(message.channel, "Got the log channel")
+        with open('data.txt', 'w') as save_log_id:  # Write only mode
+            save_log_id.write(str(message.server.id))  # Writes in file
+            save_log_id.write(str('\n'))
+            save_log_id.write(str(log_channel))
+            save_log_id.write(str('\n'))
+        with open('data.txt', 'r') as testerino:
+            print(testerino.read())
 
     elif message.content.startswith("[say"):  # WORK IN PROGRESS
-        await exclusiveCommand()
+        await exclusiveCommand(WIP=True)
         say_message = message.content[4:].strip()
         await client.send_message(message.channel, say_message)
         if not log_channel:
@@ -184,7 +190,7 @@ async def on_message(message):
         # Sends Rich Embed to value specificed, in this case, the log channel
 
     elif message.content.startswith("[removeentries"):  # WORK IN PROGRES
-        await exclusiveCommand()
+        await exclusiveCommand(dev=True)
         remove_entries_key = message.content[15:]
         if remove_entries_key == 'news':
             rss_entries_dict['news'].remove(range(0, 9))
