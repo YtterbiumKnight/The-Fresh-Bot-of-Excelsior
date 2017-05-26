@@ -56,8 +56,6 @@ def randomRssEntry():
 
 
 # --------------------------------RSS End-------------------------------------
-
-
 @client.event
 async def on_ready():
     """Ran when data finished being recieved from Discord andd logged in."""
@@ -77,12 +75,12 @@ async def on_message(message):
     global random_rss_entry
     global rss_dict_entry
 
-    async def exclusiveCommand(dev=False, WIP=False):
+    async def exclusiveCommand(dev=False, WIP=False, owner=False):
         # WORK IN PROGRESS. Stopped working after parameters.
         # When using return, it should return the function it's being
         # called in, not the function itself.
         # For when a command is a work in progress or only for devs
-        if message.author.id != '95978401654919168':
+        if message.author.id != '95978401654919168' or '138001563158446081':
             if dev is True:
                 await client.send_message(message.channel,
                                           "This command is dev tool and not"
@@ -92,6 +90,10 @@ async def on_message(message):
                                           "This command is a work in progress"
                                           " thus unavaliable for the time"
                                           " being")
+        if owner is True:
+            if message.author.id != message.server.owner.id:
+                await client.send_message(message.channel, "This command"
+                                          "is only for the server owner")
 
     if message.author.id == client.user.id:  # If message author is the bot
         return
@@ -152,10 +154,14 @@ async def on_message(message):
                                   ", 30 minute refresh rate bypassed")
 
 # ---------------------------RSS Commands End---------------------------------
+    elif message.content.startswith("[enable"):
+        await exclusiveCommand(owner=True)
+        await client.send_message(message.channel, "Testing 1 2 3")
+
     elif message.content.startswith("[setlog"):  # WORK IN PROGRESS
         # Takes channel ID to post log messages
         # To Do: Save channel ID set for server
-        await exclusiveCommand(dev=True)
+        await exclusiveCommand(owner=True)
         global log_channel
         log_channel = message.content[8:].strip()
         log_channel = int(log_channel)  # Turns log_channel in to an interger
@@ -215,6 +221,7 @@ async def on_message(message):
                            "The-Fresh-Bot-of-Excelsior", colour=0x3366FF)
         # Defines em as an embed, creates embed title, descripton, and
         # defines the color
-        em.set_footer(text="Made by Exanimem#3112 using Discord.py")
+        em.set_footer(text="Made by Exanimem#3112 and Ned#5609 using"
+                      " Discord.py")
         # Creates footer for embed
         await client.send_message(message.channel, embed=em)
