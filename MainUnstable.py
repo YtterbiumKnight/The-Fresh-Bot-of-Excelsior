@@ -20,11 +20,13 @@ client = discord.Client()
 
 server = discord.Server
 
-#  -----------------------------RSS Start--------------------------------------
-
-global rss_dict_entry  # Entry in rss_entries_dict. Each random command has
+global continue_function  # Entry in rss_entries_dict. Each random command has
 #  this defined and is used to get definition from the dictonary
 # [Global] Allows for use inside other functions
+continue_function = True
+#  -----------------------------RSS Start--------------------------------------
+
+global rss_dict_entry
 rss_dict_entry = 0
 
 global rss_entries_dict
@@ -76,24 +78,25 @@ async def on_message(message):
     global rss_dict_entry
 
     async def exclusiveCommand(dev=False, WIP=False, owner=False):
-        # WORK IN PROGRESS. Stopped working after parameters.
-        # When using return, it should return the function it's being
-        # called in, not the function itself.
-        # For when a command is a work in progress or only for devs
+        global continue_function
         if message.author.id != '95978401654919168' or '138001563158446081':
             if dev is True:
                 await client.send_message(message.channel,
-                                          "This command is dev tool and not"
+                                          "This command is a dev tool and not"
                                           " avaliable to normal users")
+                continue_function = False  # Returns the function it's
+                # called in
             if WIP is True:
                 await client.send_message(message.channel,
                                           "This command is a work in progress"
                                           " thus unavaliable for the time"
                                           " being")
+                continue_function = False
         if owner is True:
             if message.author.id != message.server.owner.id:
                 await client.send_message(message.channel, "This command"
-                                          "is only for the server owner")
+                                          " is only for the server owner")
+                continue_function = False
 
     if message.author.id == client.user.id:  # If message author is the bot
         return
@@ -115,6 +118,8 @@ async def on_message(message):
         rss_dict_entry = "awwnime"
         randomRssEntry()
         await exclusiveCommand(WIP=True)
+        if continue_function is False:
+            return
         feed_entry = feedparser.parse(
             'https://www.reddit.com/r/awwnime/.rss').entries[random_rss_entry]
         await client.send_message(message.channel, '***{0}*** \n{1}'
@@ -156,12 +161,17 @@ async def on_message(message):
 # ---------------------------RSS Commands End---------------------------------
     elif message.content.startswith("[enable"):
         await exclusiveCommand(owner=True)
+        if continue_function is False:
+            return
         await client.send_message(message.channel, "Testing 1 2 3")
 
     elif message.content.startswith("[setlog"):  # WORK IN PROGRESS
         # Takes channel ID to post log messages
         # To Do: Save channel ID set for server
+
         await exclusiveCommand(owner=True)
+        if continue_function is False:
+            return
         global log_channel
         log_channel = message.content[8:].strip()
         log_channel = int(log_channel)  # Turns log_channel in to an interger
@@ -176,6 +186,8 @@ async def on_message(message):
 
     elif message.content.startswith("[say"):  # WORK IN PROGRESS
         await exclusiveCommand(WIP=True)
+        if continue_function is False:
+            return
         say_message = message.content[4:].strip()
         await client.send_message(message.channel, say_message)
         if not log_channel:
@@ -197,6 +209,8 @@ async def on_message(message):
 
     elif message.content.startswith("[removeentries"):  # WORK IN PROGRES
         await exclusiveCommand(dev=True)
+        if continue_function is False:
+            return
         remove_entries_key = message.content[15:]
         if remove_entries_key == 'news':
             rss_entries_dict['news'].remove(range(0, 9))
