@@ -1,5 +1,7 @@
 """The Fresh Bot of Excelsior by Exanimem#3112 and Ned#5609 with discord.py."""
-# Code Style Notes: " for messages posted in chat, ' for everything else
+# Code Style Notes: " for messages posted in chat, ' for everything else.
+# Comments will be up to date with the Stable branch, though may not be
+# up to date with the Unstable branch.
 import discord
 import logging
 import random
@@ -19,39 +21,33 @@ logger.addHandler(handler)
 client = discord.Client()
 
 server = discord.Server
-
-global continue_function  # Entry in rss_entries_dict. Each random command has
-#  this defined and is used to get definition from the dictonary
-# [Global] Allows for use inside other functions
-continue_function = True
 #  -----------------------------RSS Start--------------------------------------
 
-global rss_dict_entry
-rss_dict_entry = 0
-
-global rss_entries_dict
 rss_entries_dict = {
                 'RSS': list(range(0, 10)),
                 'awwnime': list(range(0, 10)),
                 'news': list(range(0, 10)),
                 'onion': list(range(0, 10))
 }
-# Lists for each random RSS command using randomRssEntry to get entries from
+# Lists for each random RSS command so that one command doesn't remove entries
+# of another
 
 
-def randomRssEntry():
+def get_random_rss_entry(rss_dict_entry):
     """Randomly selects a number from rss_entries_dict and sets auto-refresh of entry."""
-    # Docstring ("""): Documents what an object does
-    global rss_entries_dict
-    global random_rss_entry  # Randomly chosen number
+    global random_rss_entry
+    # Global needs to be removed!
     random_rss_entry = random.choice(rss_entries_dict[rss_dict_entry])
     rss_entries_dict[rss_dict_entry].remove(random_rss_entry)
-    # Removes selected number from selected rss_dict_entry
-    print(rss_entries_dict[rss_dict_entry])  # For debugging
+    # Removes selected number to prevent duplicate entries being posted
+    print(rss_entries_dict[rss_dict_entry])
     print(random_rss_entry)
-    if not rss_entries_dict[rss_dict_entry]:  # If nothing is in it
+    # For debugging
+    if not rss_entries_dict[rss_dict_entry]:
         print('List is empty, refresh or wait')
-        if min == 30:  # After 30 minutes
+        if min == 30:
+            # 30 minute timer keeps the entries being posted fresh rather than
+            # the same ones every refresh
             print('Auto-refreshed')
             rss_entries_dict[rss_dict_entry] = list(range(0, 10))
             # Sets back to original definition, effectively resetting it
@@ -73,51 +69,48 @@ async def on_ready():
 @client.event
 async def on_message(message):
     """When a message is sent."""
-    global rss_entries_dict
     global random_rss_entry
-    global rss_dict_entry
 
-    async def exclusiveCommand(dev=False, WIP=False, owner=False):
-        global continue_function
-        if message.author.id != '95978401654919168' or '138001563158446081':
+    async def exclusive_command(dev=False, WIP=False, owner=False):
+        if message.author.id != '95978401654919168' or message.author.id != '138001563158446081':
+            # ID's are the devs ID's
             if dev is True:
                 await client.send_message(message.channel,
                                           "This command is a dev tool and not"
                                           " avaliable to normal users")
-                continue_function = False  # Returns the function it's
-                # called in
-            if WIP is True:
+                return False
+                # Returns the function it's called in
+            elif WIP is True:
                 await client.send_message(message.channel,
                                           "This command is a work in progress"
                                           " thus unavaliable for the time"
                                           " being")
-                continue_function = False
-        if owner is True:
-            if message.author.id != message.server.owner.id:
+                return False
+        elif message.author.id != message.server.owner.id:
+            if owner is True:
                 await client.send_message(message.channel, "This command"
                                           " is only for the server owner")
-                continue_function = False
+                return False
+        else:
+            pass
 
-    if message.author.id == client.user.id:  # If message author is the bot
+    if message.author.id == client.user.id:
         return
+        # Prevents people abusing [say to make the bot trigger it's own commands
 
 # ---------------------------RSS Commands Start--------------------------
 
     elif message.content.startswith("[rss"):
-        rss_dict_entry = "RSS"
-        randomRssEntry()
-        feed = message.content[4:].strip()  # Strip of first four letters
+        get_random_rss_entry('RSS')
+        feed = message.content[4:].strip()
         feed_entry = feedparser.parse(feed).entries[random_rss_entry]
-        # random_rss_entry is position in the feed
         await client.send_message(message.channel, '***{0}*** \n{1}'
                                   .format(feed_entry.title, feed_entry.link))
 
     elif message.content.startswith("[awwnime"):
-        # Status: Waiting for comments on Reddit post to make it work
         # Cannot get link post's link with current knowledge and research
-        rss_dict_entry = "awwnime"
-        randomRssEntry()
-        await exclusiveCommand(WIP=True)
+        get_random_rss_entry('awwnime')
+        continue_function = await exclusive_command(WIP=True)
         if continue_function is False:
             return
         feed_entry = feedparser.parse(
@@ -132,8 +125,7 @@ async def on_message(message):
                                   .format(feed_entry.title, feed_entry.link))
 
     elif message.content.startswith("[news"):
-        rss_dict_entry = "news"
-        randomRssEntry()
+        get_random_rss_entry('news')
         feed_entry = feedparser.parse(
             'http://feeds.reuters.com'
             '/reuters/topNews').entries[random_rss_entry]
@@ -141,8 +133,7 @@ async def on_message(message):
                                   .format(feed_entry.title, feed_entry.link))
 
     elif message.content.startswith("[onion"):
-        rss_dict_entry = "onion"
-        randomRssEntry()
+        get_random_rss_entry('onion')
         feed_entry = feedparser.parse(
                 'http://www.theonion.com'
                 '/feeds/rss').entries[random_rss_entry]
@@ -150,42 +141,57 @@ async def on_message(message):
                                   .format(feed_entry.title, feed_entry.link))
 
     elif message.content.startswith("[refresh"):
-        global rss_entries_dict
-        rss_entries_dict['RSS'] = list(range(0, 10))
-        rss_entries_dict['awwnime'] = list(range(0, 10))
-        rss_entries_dict['news'] = list(range(0, 10))
-        rss_entries_dict['onion'] = list(range(0, 10))
+        for key, values in rss_entries_dict.items():
+            rss_entries_dict[key] = list(range(0, 10))
         await client.send_message(message.channel, "All RSS commands refreshed"
-                                  ", 30 minute refresh rate bypassed")
+                                  "; 30 minute refresh rate bypassed")
 
 # ---------------------------RSS Commands End---------------------------------
-    elif message.content.startswith("[enable"):
-        await exclusiveCommand(owner=True)
+    elif message.content.startswith("[test"):
+        # Just for testing ;)
+        continue_function = await exclusive_command(False)
         if continue_function is False:
             return
         await client.send_message(message.channel, "Testing 1 2 3")
 
-    elif message.content.startswith("[setlog"):  # WORK IN PROGRESS
+    elif message.content.startswith("[setlog"):
         # Takes channel ID to post log messages
-        # To Do: Save channel ID set for server
 
-        await exclusiveCommand(owner=True)
+        continue_function = await exclusive_command(owner=True)
         if continue_function is False:
             return
-        global log_channel
-        log_channel = message.content[8:].strip()
-        log_channel = int(log_channel)  # Turns log_channel in to an interger
-        await client.send_message(message.channel, "Got the log channel")
-        with open('data.txt', 'w') as save_log_id:  # Write only mode
-            save_log_id.write(str(message.server.id))  # Writes in file
+        try_log_channel = message.content[8:].strip()
+        # Must be tested to see if it's an actual channel ID
+        try:
+            int(try_log_channel)
+        except ValueError:
+            # Channel IDs have no alphabetical characters
+            print('Channel ID invalid, contains alphabetical characters')
+            await client.send_message(message.channel, "That's an invalid "
+                                      "channel ID, please try again")
+            return
+        if len(try_log_channel) != 18:
+            # Channel IDs are exactly 18 characters in length
+            await client.send_message(message.channel, "That's an invalid "
+                                      "channel ID, please try again")
+            raise ValueError('Channel ID invalid,'
+                             ' incorrect amount of characters')
+            return
+        await client.send_message(message.channel, "Valid log channel ID"
+                                  "accepted")
+        log_channel = try_log_channel
+        with open('data.txt', 'w') as save_log_id:
+            save_log_id.write(str(message.server.id))
             save_log_id.write(str('\n'))
             save_log_id.write(str(log_channel))
             save_log_id.write(str('\n'))
         with open('data.txt', 'r') as testerino:
             print(testerino.read())
+        print(log_channel)
+        # For debugging
 
     elif message.content.startswith("[say"):  # WORK IN PROGRESS
-        await exclusiveCommand(WIP=True)
+        continue_function = await exclusive_command(WIP=True)
         if continue_function is False:
             return
         say_message = message.content[4:].strip()
@@ -193,22 +199,20 @@ async def on_message(message):
         if not log_channel:
             return
         # ----------------------Logging Below----------------------------
+        # Done to find abusers of the command. Done in Rich Embed format
         print('I was told by {0} to say "{1}"'
               .format(message.author, say_message))
-        # Logs who made it say what
         em = discord.Embed(title="Say Command Used", color=0xFFFFFF)
         em.add_field(inline=True, name="Commander", value="{}".format(
-            message.author))  # Adds commander field
+            message.author))
         em.add_field(inline=True, name="Said Message", value="{}"
                      .format(say_message))
-        # What message the bot was made to say
         em.set_footer(text="{}".format(message.timestamp))
-        # Adds timestamp footer
         await client.send_message(discord.Object(id=log_channel), embed=em)
-        # Sends Rich Embed to value specificed, in this case, the log channel
 
-    elif message.content.startswith("[removeentries"):  # WORK IN PROGRES
-        await exclusiveCommand(dev=True)
+    elif message.content.startswith("[removeentries"):
+        # Work in Progress. Command for debugging.
+        continue_function = await exclusive_command(dev=True)
         if continue_function is False:
             return
         remove_entries_key = message.content[15:]
@@ -233,9 +237,6 @@ async def on_message(message):
                            "**[refresh** - Bypasses 30 minute refresh rate"
                            "\n**Github** - https://github.com/Exanimem/"
                            "The-Fresh-Bot-of-Excelsior", colour=0x3366FF)
-        # Defines em as an embed, creates embed title, descripton, and
-        # defines the color
         em.set_footer(text="Made by Exanimem#3112 and Ned#5609 using"
                       " Discord.py")
-        # Creates footer for embed
         await client.send_message(message.channel, embed=em)
